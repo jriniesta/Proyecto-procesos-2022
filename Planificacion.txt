@@ -1,0 +1,24 @@
+Planificación inicial del proyecto:
+
+1) Puesta en marcha del proyecto
+- Arquitectura base
+- Implementar la arquitectura base: servidor (modelo - REST) - cliente
+(cliente REST - interfaz GUI) -> prototipo inicial
+- Desplegar prototipo inicial
+
+2) Implementar el juego
+- Mientras quede funcionalidad:
+    - elegir funcionalidad - implementar - probar - Desplegar
+
+3) Capa de acceso a datos    
+- Agregar persistencia
+
+4) Agregar funcionalidad
+
+
+---
+
+- diseñar - implementar el modelo (toda la funcionalidad)
+- integrar el modelo en la arquitectura SaaS: REST - cliente
+- persistencia
+- otros
