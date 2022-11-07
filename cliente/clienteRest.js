@@ -10,6 +10,7 @@ function ClienteRest(){
 				cli.nick=data.nick;
 				//ws.nick=data.nick;
 				$.cookie("nick",data.nick);
+				cws.conectar();
 				iu.mostrarHome();//iu.mostrarHome(data.nick)
 			}
 			else{
@@ -71,5 +72,12 @@ function ClienteRest(){
 			console.log(lista);
 			iu.mostrarListaDePartidasDisponibles(lista);
 		});
+	}
+	this.usuarioSale=function(){
+		let nick=this.nick;
+		$.getJSON("/salir/"+nick,function(){
+			$.removeCookie("nick");
+			iu.comprobarCookie();
+		})
 	}
 }

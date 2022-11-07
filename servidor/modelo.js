@@ -14,6 +14,12 @@ function Juego(){
 	this.eliminarUsuario=function(nick){
 		delete this.usuarios[nick];
 	}
+	this.usuarioSale=function(nick){
+		if (this.usuarios[nick]){
+			this.finalizarPartida(nick);
+			this.eliminarUsuario(nick);
+		}
+	}
 	this.jugadorCreaPartida=function(nick){
 		let usr = this.usuarios[nick];
 		let res={codigo:-1};
@@ -57,6 +63,11 @@ function Juego(){
 		}
 		return lista;
 	}
+	this.obtenerPartida=function(codigo){
+		if (this.partidas[codigo]){
+			return this.partidas[codigo];
+		}
+	}
 	this.obtenerPartidasDisponibles=function(){
 		let lista=[];
 		for (let key in this.partidas){
@@ -65,6 +76,13 @@ function Juego(){
 			}
 		}
 		return lista;
+	}
+	this.finalizarPartida=function(nick){
+		for (let key in this.partidas){
+			if (this.partidas[key].fase=="inicial" && this.partidas[key].estoy(nick)){
+				this.partidas[key].fase="final";
+			}
+		}
 	}
 }
 
@@ -105,6 +123,17 @@ function Partida(codigo,usr){
 	}
 	this.hayHueco=function(){
 		return (this.jugadores.length<this.maxJugadores)
+	}
+	this.estoy=function(nick){
+		for(i=0;i<this.jugadores.length;i++){
+			if (this.jugadores[i].nick==nick){
+				return true
+			}
+		}
+		return false;
+	}
+	this.esJugando=function(){
+		return this.fase=="jugando";
 	}
 	this.agregarJugador(this.owner);
 }
