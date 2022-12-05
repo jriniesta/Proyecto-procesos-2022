@@ -1,83 +1,101 @@
-function ClienteRest(){
-	this.nick;	
-	this.agregarUsuario=function(nick){
-		let cli=this;
-		$.getJSON("/agregarUsuario/"+nick,function(data){
-			//se ejecuta cuando conteste el servidor
-			console.log(data);
-			if (data.nick!=-1){
-				console.log("Usuario "+data.nick+" registrado")
-				cli.nick=data.nick;
-				//ws.nick=data.nick;
-				$.cookie("nick",data.nick);
-				cws.conectar();
-				iu.mostrarHome();//iu.mostrarHome(data.nick)
-			}
-			else{
-				console.log("No se ha podido registrar el usuario")
-				iu.mostrarModal("El nick ya está en uso");
-				iu.mostrarAgregarUsuario();
-			}
-		});
-	}
-	this.crearPartida=function(){
-		let cli=this;
-		let nick=cli.nick;
-		$.getJSON("/crearPartida/"+nick,function(data){
-			console.log(data);
-			if (data.codigo!=-1){
-				console.log("Usuario "+nick+" crea partida codigo: "+data.codigo)
-				iu.mostrarCodigo(data.codigo);
-				//ws.nick=data.nick;
-				//$.cookie("nick",ws.nick);
-				//iu.mostrarHome(data);
-			}
-			else{
-				console.log("No se ha podido crear partida")
-				//iu.mostrarModal("El nick ya está en uso");
-				//iu.mostrarAgregarJugador();
-			}
-		});
-	}
-	this.unirseAPartida=function(codigo){
-		let cli=this;
-		$.getJSON("/unirseAPartida/"+cli.nick+"/"+codigo,function(data){
-			//se ejecuta cuando conteste el servidor
-			//console.log(data);
-			if (data.codigo!=-1){
-				console.log("Usuario "+cli.nick+" se une a partida codigo: "+data.codigo);
-				iu.mostrarCodigo(data.codigo);
-				//ws.nick=data.nick;
-				//$.cookie("nick",ws.nick);
-				//iu.mostrarHome(data);
-			}
-			else{
-				console.log("No se ha podido unir a partida")
-				//iu.mostrarModal("El nick ya está en uso");
-				//iu.mostrarAgregarJugador();
-			}
-		});
-	}
-	this.obtenerListaPartidas=function(){
-		let cli=this;
-		//obtenerPartidasDisponibles
-		$.getJSON("/obtenerPartidas",function(lista){
-			console.log(lista);
-			iu.mostrarListaDePartidas(lista);
-		});
-	}
-	this.obtenerListaPartidasDisponibles=function(){
-		let cli=this;
-		$.getJSON("/obtenerPartidasDisponibles",function(lista){
-			console.log(lista);
-			iu.mostrarListaDePartidasDisponibles(lista);
-		});
-	}
-	this.usuarioSale=function(){
-		let nick=this.nick;
-		$.getJSON("/salir/"+nick,function(){
-			$.removeCookie("nick");
-			iu.comprobarCookie();
-		})
-	}
-}
+function ClienteRest() {
+	var ultimaPartidaCreada;
+  
+	this.agregarUsuario = function (nick) {
+	  var cli = this;
+	  $.getJSON("/agregarUsuario/" + nick, function (data) {
+		console.log(data);
+		if (data.nick == -1) {
+		  console.log(`El usuario ${nick} ya está en uso`);
+		  iu.mostrarAgregarUsuario();
+		  iu.mostrarModal("El nick ya está en uso");
+		  //iu.mostrarAgregarJugador();
+		  return;
+		}
+		console.log(`El usuario ${nick} se ha registrado`);
+		$.cookie("nick", nick);
+		iu.mostrarHome();
+		//   ws.nick = data.nick;
+		//iu.mostrarHome(data);
+	  });
+	};
+  
+	this.agregarUsuarioDesdeCookie = function (nick) {
+	  var cli = this;
+	  $.getJSON("/leerUsuario/" + nick, function (data) {
+		if (data.nick == -1) {
+		  iu.limpiarPantalla();
+		  iu.mostrarAgregarUsuario();
+		  return;
+		}
+		iu.recuperarSesionCallback();
+	  });
+	};
+  
+	this.crearPartida = function (nick) {
+	  var cli = this;
+	  $.getJSON("/crearPartida/" + nick, function (data) {
+		console.log(data);
+		if (data.partida == -1) {
+		  console.log(`No se pudo crear un juego`);
+		  //iu.mostrarModal("El nick ya está en uso");
+		  //iu.mostrarAgregarJugador();
+		  return;
+		}
+		console.log(`El usuario ${nick} ha creado la partida ${data.partida}`);
+		cli.ultimaPartidaCreada = data.partida;
+		iu.mostrarListaDePartidas();
+		iu.mostrarPartidaUnido(data.partida);
+		$.cookie("nick", nick);
+		$.cookie("codigoP", data.partida);
+		//iu.mostrarHome(data);
+	  });
+	};
+  
+	this.unirAPartida = function (nick, codigo) {
+	  var cli = this;
+	  $.getJSON(`/unirAPartida/${codigo}/${nick}`, function (data) {
+		console.log(data);
+		if (!data.seHaUnido) {
+		  console.log(`${nick} No se pudo unir al juego ${codigo}`);
+		  //iu.mostrarAgregarJugador();
+		  return;
+		}
+		console.log(`El usuario ${nick} se ha unido a la partida ${codigo}`);
+		iu.mostrarPartidaUnido(data.partida);
+		$.cookie("nick", nick);
+		$.cookie("codigoP", codigo);
+		//iu.mostrar                  Home(data);
+	  });
+	};
+  
+	this.obtenerPartidas = function () {
+	  var cli = this;
+	  $.getJSON("/obtenerPartidas", function (data) {
+		console.log(data);
+	  });
+	};
+  
+	this.obtenerPartidasDisponibles = function () {
+	  if ($.cookie("nick") == undefined) {
+		return;
+	  }
+  
+	  var cli = this;
+	  $.getJSON("/obtenerPartidasDisponibles", function (data) {
+		console.log(data);
+		iu.mostrarListaDePartidasCallback(data);
+	  });
+	};
+  
+	this.crearPartidaCon = function (nick1, nick2) {
+	  //Jquery debería ser síncrono para que esto funcione
+	  jQuery.ajaxSetup({ async: false });
+	  this.agregarUsuario(nick1);
+	  this.agregarUsuario(nick2);
+	  this.crearPartida(nick1);
+	  this.unirAPartida(nick2, this.ultimaPartidaCreada);
+	  jQuery.ajaxSetup({ async: true });
+	};
+  }
+  
